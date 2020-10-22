@@ -9,6 +9,10 @@ os:
   - osx
   - windows
 
+dist: focal # "dist" definisce la distribuzione di linux
+
+#osx_image: xcode9.4 # "osx_image" definisce la distribuzione di osx
+
 arch:
   - amd64
   - arm64
