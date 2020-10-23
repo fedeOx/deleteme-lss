@@ -27,11 +27,11 @@ arch:
   - arm64
 
 env:
-  global:
+  global: # variabili globali che valgono per tutti i jobs
     - GRAVIS_REPO="https://github.com/DanySK/Gravis-CI.git"
     - GRAVIS="$HOME/gravis"
     - TERM="dumb" // evita che gradle stampi "lo schifo"
-  matrix:
+  matrix: # crea una build a parte per ogni combinazione di ogni elemento di questa lista con ogni possibile OS specificato e architettura specificata.
     - *reference_jdk
     - JDK="adopt@1.8"
     - JDK="adopt@1.14"
@@ -42,7 +42,7 @@ env:
 stages:
   - Compile
   - Kotlin Style Check
-  - Complete Check # in questo modo prima eseguo lo stage "check" poi lo stage "test"
+  - Complete Check # in questo modo prima eseguo lo stage "Complete Check" poi lo stage "test"
   - name: test
     if: 'commit_message !~ \[\s*skip(?: |-|\.)test\s*\].*' # in questo modo se qualcuno scrive un commit che nel testo del commit matcha la regex specificata, la fase di test viene saltata.
   - name: Delivery # creo uno stage chiamato "Delivery" che si attiva solo se il nome del possessore del repository che ha triggerato i jobs, è il mio.
@@ -57,7 +57,7 @@ _workspace_name: &workspace_name
   compiled_env
 
 _import_workspace: &import_workspace
-  workspaces: # Il job sopra riuserà il workspace *workspace_name.
+  workspaces: # Lo stage sopra riuserà il workspace *workspace_name.
     use: *workspace_name
 
 jobs: # consente di specificare condizioni per cui determinati job devono essere inclusi o esclusi
@@ -66,16 +66,16 @@ jobs: # consente di specificare condizioni per cui determinati job devono essere
       env: JDK="adopt-openj9@1.8"
     - arch: arm64
       env: JDK="adopt-openj9@1.14"
-    - <<: *reference_machine # metti qui dentro la cosa puntata da _reference_machine e su quell'oggetto fai le modifiche indicate sotto (fai override dell'eventuale chiave "stage" con "stage: test"
+    - <<: *reference_machine # metti qui dentro la cosa puntata da _reference_machine e su quell'oggetto fai le modifiche indicate sotto (fai override dell'eventuale chiave "stage" con "stage: test")
       stage: test
   include: # dentro include ci posso andare ad indicare le cose che devono essere fatte nello specifico nei vari jobs diversi da "test".
     - <<: *reference_machine
       stage: Compile
       script: travis_retry sh ./gradlew compileKotlin --parallel
-      workspaces: # Il job sopra in questo modo dovrebbe creare il workspace.
+      workspaces: # Lo stage "Compile" in questo modo dovrebbe creare il workspace.
         create:
           name: *workspace_name
-          paths: # quali percorsi inserire nel workspace, a noi interessa salvarci tutta la cache di gradle.
+          paths: # quali percorsi inserire nel workspace, a noi interessa salvarci tutta la build_dir di travis (così evitiamo di ripetere ad ogni stage la build) e il file ".gradle" così evitiamo di dovercelo scaricare ad ogni stage.
             - "$TRAVIS_BUILD_DIR"
             - "$HOME/.gradle"
     - <<: *reference_machine
