@@ -42,6 +42,8 @@ stages:
   - Kotlin Style Check
   - Complete Check # in questo modo prima eseguo lo stage "check" poi lo stage "test"
   - test
+  - name: Delivery # creo uno stage chiamato "Delivery" che si attiva solo se il nome del possessore del repository che ha triggerato i jobs, è il mio
+    if: repo = fedeOx/deleteme-lss
 
 _reference_machine: &reference_machine
   arch: *reference_arch
@@ -53,7 +55,7 @@ _workspace_name: &workspace_name
 
 _import_workspace: &import_workspace
   workspaces: # Il job sopra riuserà il workspace *workspace_name.
-  use: *workspace_name
+    use: *workspace_name
 
 jobs: # consente di specificare condizioni per cui determinati job devono essere inclusi o esclusi
   exclude: # escludi le combinazioni in cui architetttura è arm64 e hanno come chiave di ambiente JDK="adopt-openj9@1.8" o JDK="adopt-openj9@1.14"
@@ -61,12 +63,12 @@ jobs: # consente di specificare condizioni per cui determinati job devono essere
       env: JDK="adopt-openj9@1.8"
     - arch: arm64
       env: JDK="adopt-openj9@1.14"
-    - <<: *reference_machine # metti qui dentro la cosa puntata da _reference_machine e su quell'oggetto fai le modifiche indicate sotto (fai overrida dell'eventuale chiave "stage" con "stage: test"
+    - <<: *reference_machine # metti qui dentro la cosa puntata da _reference_machine e su quell'oggetto fai le modifiche indicate sotto (fai override dell'eventuale chiave "stage" con "stage: test"
       stage: test
-  include:
+  include: # dentro include ci posso andare ad indicare le cose che devono essere fatte nello specifico nei vari jobs diversi da "test".
     - <<: *reference_machine
       stage: Compile
-      script: sh ./gradlew compileKotlin --parallel
+      script: travis_retry sh ./gradlew compileKotlin --parallel
       workspaces: # Il job sopra in questo modo dovrebbe creare il workspace.
         create:
           name: *workspace_name
@@ -76,12 +78,14 @@ jobs: # consente di specificare condizioni per cui determinati job devono essere
     - <<: *reference_machine
       stage: Kotlin Style Check
       <<: *import_workspace
-      script: sh ./gradlew detekt ktlintCheck --parallel
+      script: travis_retry sh ./gradlew detekt ktlintCheck --parallel
     - <<: *reference_machine
       stage: Complete Check # gli dico che questa include fa riferimento allo stage chiamato "check".
       <<: *import_workspace
       script:
         - travis_retry sh ./gradlew check
+    - stage: Delivery #Indico che questo stage deve essere eseguito solo quando la modifica che lo ha triggerato è stata fatta su uno dei miei branch principali (es. master)
+      script: 'true'
 
 before_install:
   - travis_retry git clone --depth 1 $GRAVIS_REPO $GRAVIS
