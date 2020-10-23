@@ -66,7 +66,7 @@ jobs: # consente di specificare condizioni per cui determinati job devono essere
   include:
     - <<: *reference_machine
       stage: Compile
-      script: sh ./gradlew compile --parallel
+      script: sh ./gradlew compileKotlin --parallel
       workspaces: # Il job sopra in questo modo dovrebbe creare il workspace.
         create:
           name: *workspace_name
