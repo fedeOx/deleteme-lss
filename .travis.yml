@@ -1,3 +1,5 @@
+if: repo != head_repo # rendo tutta la build condizionale. In particolare, disabilito la build per le pull request interne.
+
 _reference_os: &reference_os # creo un puntatore alla chiave custom creata "_reference_os". I puntatori possono puntare qualsiasi cosa, quando faccio *puntatore mi porto dietro tutto ciò che è puntato.
   linux
 _reference_arch: &reference_arch
