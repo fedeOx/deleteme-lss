@@ -1,3 +1,10 @@
+_reference_os: &reference_os # creo un puntatore alla chiave custom creata
+  linux
+_reference_arch: &reference_arch
+  amd64
+_reference_jdk: &reference_jdk
+  JDK="adopt@1.11"
+
 language: minimal
 
 git:
@@ -5,7 +12,7 @@ git:
   autocrlf: input
 
 os:
-  - linux
+  - *reference_os
   - osx
   - windows
 
@@ -14,7 +21,7 @@ dist: focal # "dist" definisce la distribuzione di linux
 #osx_image: xcode9.4 # "osx_image" definisce la distribuzione di osx
 
 arch:
-  - amd64
+  - *reference_arch
   - arm64
 
 env:
@@ -23,12 +30,21 @@ env:
     - GRAVIS="$HOME/gravis"
     - JDK="adopt@1.11.0-8"
   matrix:
-    - JDK="adopt@1.11"
+    - *reference_jdk
     - JDK="adopt@1.8"
     - JDK="adopt@1.14"
     - JDK="adopt-openj9@1.11"
     - JDK="adopt-openj9@1.8"
     - JDK="adopt-openj9@1.14"
+
+stages:
+  - check # in questo modo prima eseguo lo stage "check" poi lo stage "test"
+  - test
+
+_reference_machine: &reference_machine
+  arch: *reference_arch
+  os: *reference_os
+  env: *reference_jdk
 
 jobs: # consente di specificare condizioni per cui determinati job devono essere inclusi o esclusi
   exclude: # escludi le combinazioni in cui architetttura è arm64 e hanno come chiave di ambiente JDK="adopt-openj9@1.8" o JDK="adopt-openj9@1.14"
@@ -36,6 +52,13 @@ jobs: # consente di specificare condizioni per cui determinati job devono essere
       env: JDK="adopt-openj9@1.8"
     - arch: arm64
       env: JDK="adopt-openj9@1.14"
+    - <<: *reference_machine # metti qui dentro la cosa puntata da _reference_machine e su quell'oggetto fai le modifiche indicate sotto (fai overrida dell'eventuale chiave "stage" con "stage: test"
+      stage: test
+  include:
+    - <<: *reference_machine
+      stage: check # gli dico che questa include fa riferimento allo stage chiamato "check".
+      script:
+        - travis_retry sh ./gradlew check
 
 before_install:
   - travis_retry git clone --depth 1 $GRAVIS_REPO $GRAVIS
@@ -45,4 +68,4 @@ install:
   - true
 
 script:
-  - travis_retry sh ./gradlew check
+  - travis_retry sh ./gradlew test
