@@ -40,7 +40,7 @@ env:
 stages:
   - Compile
   - Kotlin Style Check
-  - Check # in questo modo prima eseguo lo stage "check" poi lo stage "test"
+  - Complete Check # in questo modo prima eseguo lo stage "check" poi lo stage "test"
   - test
 
 _reference_machine: &reference_machine
@@ -64,7 +64,7 @@ jobs: # consente di specificare condizioni per cui determinati job devono essere
       stage: Kotlin Style Check
       script: ./gradlew detekt ktlintCheck --parallel
     - <<: *reference_machine
-      stage: Check # gli dico che questa include fa riferimento allo stage chiamato "check".
+      stage: Complete Check # gli dico che questa include fa riferimento allo stage chiamato "check".
       script:
         - travis_retry sh ./gradlew check
 
