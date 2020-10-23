@@ -48,6 +48,13 @@ _reference_machine: &reference_machine
   os: *reference_os
   env: *reference_jdk
 
+_workspace_name: &workspace_name
+  compiled_env
+
+_import_workspace: &import_workspace
+  workspaces: # Il job sopra riuserà il workspace *workspace_name.
+  use: *workspace_name
+
 jobs: # consente di specificare condizioni per cui determinati job devono essere inclusi o esclusi
   exclude: # escludi le combinazioni in cui architetttura è arm64 e hanno come chiave di ambiente JDK="adopt-openj9@1.8" o JDK="adopt-openj9@1.14"
     - arch: arm64
@@ -59,12 +66,20 @@ jobs: # consente di specificare condizioni per cui determinati job devono essere
   include:
     - <<: *reference_machine
       stage: Compile
-      script: ./gradlew compile --parallel
+      script: sh ./gradlew compile --parallel
+      workspaces: # Il job sopra in questo modo dovrebbe creare il workspace.
+        create:
+          name: *workspace_name
+          paths: # quali percorsi inserire nel workspace, a noi interessa salvarci tutta la cache di gradle.
+            - "$TRAVIS_BUILD_DIR"
+            - "$HOME/.gradle"
     - <<: *reference_machine
       stage: Kotlin Style Check
-      script: ./gradlew detekt ktlintCheck --parallel
+      <<: *import_workspace
+      script: sh ./gradlew detekt ktlintCheck --parallel
     - <<: *reference_machine
       stage: Complete Check # gli dico che questa include fa riferimento allo stage chiamato "check".
+      <<: *import_workspace
       script:
         - travis_retry sh ./gradlew check
 
