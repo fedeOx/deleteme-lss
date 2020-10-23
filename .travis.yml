@@ -1,4 +1,4 @@
-_reference_os: &reference_os # creo un puntatore alla chiave custom creata
+_reference_os: &reference_os # creo un puntatore alla chiave custom creata "_reference_os". I puntatori possono puntare qualsiasi cosa, quando faccio *puntatore mi porto dietro tutto ciò che è puntato.
   linux
 _reference_arch: &reference_arch
   amd64
@@ -38,7 +38,9 @@ env:
     - JDK="adopt-openj9@1.14"
 
 stages:
-  - check # in questo modo prima eseguo lo stage "check" poi lo stage "test"
+  - Compile
+  - Kotlin Style Check
+  - Check # in questo modo prima eseguo lo stage "check" poi lo stage "test"
   - test
 
 _reference_machine: &reference_machine
@@ -56,7 +58,13 @@ jobs: # consente di specificare condizioni per cui determinati job devono essere
       stage: test
   include:
     - <<: *reference_machine
-      stage: check # gli dico che questa include fa riferimento allo stage chiamato "check".
+      stage: Compile
+      script: ./gradlew compile --parallel
+    - <<: *reference_machine
+      stage: Kotlin Style Check
+      script: ./gradlew detekt ktlintCheck --parallel
+    - <<: *reference_machine
+      stage: Check # gli dico che questa include fa riferimento allo stage chiamato "check".
       script:
         - travis_retry sh ./gradlew check
 
