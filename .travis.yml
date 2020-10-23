@@ -44,7 +44,7 @@ stages:
   - Kotlin Style Check
   - Complete Check # in questo modo prima eseguo lo stage "check" poi lo stage "test"
   - name: test
-    if: "commit_message !~ \[\s*skip(?: |-|\.)test\s*\].*" # in questo modo se qualcuno scrive un commit che nel testo del commit matcha la regex specificata, la fase di test viene saltata.
+    if: 'commit_message !~ \[\s*skip(?: |-|\.)test\s*\].*' # in questo modo se qualcuno scrive un commit che nel testo del commit matcha la regex specificata, la fase di test viene saltata.
   - name: Delivery # creo uno stage chiamato "Delivery" che si attiva solo se il nome del possessore del repository che ha triggerato i jobs, è il mio.
     if: repo = fedeOx/deleteme-lss
 
